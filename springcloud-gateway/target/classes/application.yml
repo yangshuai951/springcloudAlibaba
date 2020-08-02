@@ -1,0 +1,83 @@
+#端口
+server:
+  port: 9527
+
+#调用下游服务的超时时间(以springcloud-order服务为例子)
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 50000
+
+#gateway名称
+spring:
+  application:
+    name: springcloud-gateway
+  cloud:
+    nacos:
+      discovery:
+        # 使用 Naoos 作为服务注册发现
+        server-addr: 127.0.0.1:8848
+    # 路由网关配置
+    gateway:
+      discovery:
+        locator:
+          #开启从注册中心动态创建路由的功能，利用微服务名称进行路由
+          enabled: true
+          #是将请求路径上的服务名配置为小写（因为服务注册的时候，向注册中心注册时将服务名转成大写的了），比如以/service-hi/*的请求路径被路由转发到服务名为service-hi的服务上。
+          lower-case-service-id: true
+      routes:
+        #路由的id,没有规定规则但要求唯一,建议配合服务名
+        - id: springcloud-order
+          #匹配后提供服务的路由地址
+          uri: lb://springcloud-order
+          predicates:
+            # 断言，路径相匹配的进行路由
+            - Path=/springcloud-order/**
+          filters:
+            #路由前进行截取前几个/xxxx/
+            - StripPrefix=1
+            - name: Hystrix
+              args:
+                name: fallbackcmd
+                fallbackUri: forward:/fallback
+    #使用 Sentinel 作为熔断器 进行流量控制等
+    sentinel:
+      transport:
+        port: 9719
+        dashboard: 127.0.0.1:8080
+
+
+
+feign:
+  #使用 Sentinel 作为熔断器 进行流量控制等
+  sentinel:
+    enabled:
+  #gateway调用下游服务的超时配置
+  hystrix:
+    enabled: true
+
+#配置日志级别，方别调试
+logging:
+  level:
+    org:
+      springframework:
+        cloud:
+          gateway: debug
+  file:
+    name: springcloud-gateway.log
+  pattern:
+    #日志高亮
+    file: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID}){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx'
+# 服务端点检查
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+

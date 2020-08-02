@@ -1,0 +1,13 @@
+server:
+  port: 2002
+
+spring:
+  application:
+    name: springcloud-storage
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+      config:
+        server-addr: localhost:8848 #Nacos作为配置中心地址
+        file-extension: yaml #指定yaml格式配置
