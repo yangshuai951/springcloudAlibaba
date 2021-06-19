@@ -64,6 +64,19 @@ public class AccountController {
 
     }
 
+    @RequestMapping("/login/test")
+    public CommonResult logintest4() {
+        //todo 从数据库验证 后续更改
+        Account account = new Account();
+        account.setId(1l);
+        account.setHeadImg("qqqq");
+        account.setName("张三");
+        String token = JwtUtil.geneJsonWebToken(account);
+
+        return new CommonResult(200, "用户登录成功", token.toString());
+
+    }
+
     //发送到发送到发送地方·
 
 }
